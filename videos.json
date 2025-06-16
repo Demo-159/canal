@@ -1,17 +1,26 @@
-[
-  {
-    "title": "Video 1",
-    "url": "https://ia802203.us.archive.org/25/items/12.-heidi-latino/02.%20Heidi%20-%20En%20casa%20del%20abuelo%20-%20Latino.mp4",
-    "duration": 1493
-  },
-  {
-    "title": "Video 2",
-    "url": "https://ia902203.us.archive.org/25/items/12.-heidi-latino/03.%20Heidi%20-%20Hacia%20los%20pastos%20-%20Latino.mp4",
-    "duration": 1453
-  },
-  {
-    "title": "Video 3",
-    "url": "https://ia802203.us.archive.org/25/items/12.-heidi-latino/04.%20Heidi%20-%20Uno%20m%C3%A1s%20en%20la%20familia%20-%20Latino.mp4",
-    "duration": 1450
-  }
-]
+# Dockerfile para canal 24/7
+FROM node:18-alpine
+
+# Instalar FFmpeg
+RUN apk add --no-cache ffmpeg
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Copiar archivos de dependencias
+COPY package*.json ./
+
+# Instalar dependencias
+RUN npm ci --only=production
+
+# Copiar código fuente
+COPY . .
+
+# Crear directorio para HLS
+RUN mkdir -p hls public
+
+# Exponer puerto
+EXPOSE 3000
+
+# Comando de inicio
+CMD ["npm", "start"]
