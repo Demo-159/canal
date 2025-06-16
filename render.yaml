@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: canal-247
+    env: docker
+    plan: starter # Usa 'free' si está disponible
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VIDEO_URL
+        value: https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4
+      - key: STREAM_KEY
+        value: live
+    healthCheckPath: /api/status
+    numInstances: 1
+    region: oregon # o 'singapore' para mejor cobertura global
+    
+    # Configuración de red
+    httpsPorts:
+      - 443
+    httpPorts:
+      - 80
