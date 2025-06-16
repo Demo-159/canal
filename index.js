@@ -1,7 +1,10 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 const videos = require('./videos.json');
+
+app.use(express.static('public'));
 
 function getCurrentVideoInfo() {
   const now = Date.now();
@@ -13,9 +16,9 @@ function getCurrentVideoInfo() {
     if (timeOffset < accumulated + video.duration) {
       const videoTime = timeOffset - accumulated;
       return {
-        url: `${video.url}#t=${videoTime}`,
+        url: video.url,
         title: video.title,
-        time: videoTime,
+        time: videoTime
       };
     }
     accumulated += video.duration;
@@ -25,16 +28,34 @@ function getCurrentVideoInfo() {
 
 app.get('/', (req, res) => {
   const info = getCurrentVideoInfo();
-  if (info) {
-    res.redirect(info.url);
-  } else {
-    res.status(500).send('Error al calcular la transmisión.');
-  }
-});
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <title>Canal en Vivo</title>
+      <link href="https://unpkg.com/video.js/dist/video-js.min.css" rel="stylesheet">
+      <style>
+        body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        video { width: 100%; max-width: 800px; height: auto; }
+      </style>
+    </head>
+    <body>
+      <video id="video" class="video-js vjs-default-skin" controls autoplay preload="auto">
+        <source src="${info.url}" type="video/mp4">
+      </video>
 
-app.get('/info', (req, res) => {
-  const info = getCurrentVideoInfo();
-  res.json(info);
+      <script src="https://unpkg.com/video.js/dist/video.min.js"></script>
+      <script>
+        const player = videojs('video');
+        player.ready(function() {
+          player.currentTime(${info.time});
+          player.play();
+        });
+      </script>
+    </body>
+    </html>
+  `);
 });
 
 app.listen(port, () => {
