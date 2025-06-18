@@ -1,5 +1,4 @@
 const express = require("express");
-const https = require("https");
 const http = require("http");
 const url = require("url");
 
@@ -11,40 +10,39 @@ app.get("/stream", (req, res) => {
   if (!videoUrl) return res.status(400).send("Falta el parámetro ?url");
 
   const parsedUrl = url.parse(videoUrl);
-  const client = parsedUrl.protocol === "https:" ? https : http;
-
-  const headers = {
-    "User-Agent": req.headers["user-agent"] || "Mozilla/5.0",
-    "Range": req.headers["range"] || "bytes=0-"
-  };
 
   const options = {
     hostname: parsedUrl.hostname,
     path: parsedUrl.path,
-    headers: headers
+    port: 80,
+    method: "GET",
+    headers: {
+      "User-Agent": "Mozilla/5.0",
+    },
   };
 
-  const proxyReq = client.request(options, (proxyRes) => {
-    res.writeHead(proxyRes.statusCode, {
+  const proxyReq = http.request(options, (proxyRes) => {
+    res.writeHead(200, {
       "Content-Type": "video/mp4",
-      "Content-Length": proxyRes.headers["content-length"],
       "Accept-Ranges": "bytes",
-      "Content-Range": proxyRes.headers["content-range"] || ""
+      "Content-Length": proxyRes.headers["content-length"],
+      "Content-Disposition": "inline"
     });
+
     proxyRes.pipe(res);
   });
 
   proxyReq.on("error", (e) => {
-    res.status(500).send("Error en el proxy: " + e.message);
+    res.status(500).send("Error: " + e.message);
   });
 
   proxyReq.end();
 });
 
 app.get("/", (req, res) => {
-  res.send("Proxy listo para streaming de .mp4.");
+  res.send("Proxy funcionando para tu video.");
 });
 
 app.listen(PORT, () => {
-  console.log("Servidor corriendo en el puerto", PORT);
+  console.log("Servidor corriendo en puerto", PORT);
 });
